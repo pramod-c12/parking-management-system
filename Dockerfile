@@ -1,6 +1,9 @@
 # Use official Node image
 FROM node:23-slim
 
+# Install netcat for wait-for-db.sh
+RUN apt-get update && apt-get install -y netcat && rm -rf /var/lib/apt/lists/*
+
 # Create app directory
 WORKDIR /app
 
