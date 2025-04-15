@@ -23,15 +23,12 @@ app.get('/', (req, res) => {
 });
 
 // Connect to DB
-connectDB()
-  .then(() => {
-    // Seed the slots after the DB is connected
-    seedSlots();
-  })
-  .catch((err) => {
-    console.error('❌ Error connecting to DB:', err);
-    process.exit(1); // Exit if DB connection fails
-  });
+connectDB().then(async () => {
+  console.log('Database connected and synced!');
+
+  // Seed only after DB is ready
+  await seedSlots();
+});
 
 // Start the server
 app.listen(PORT, () => {

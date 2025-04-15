@@ -23,4 +23,4 @@ const seedSlots = async () => {
   }
 };
 
-seedSlots();
+module.exports = seedSlots;
