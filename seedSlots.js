@@ -16,10 +16,8 @@ const seedSlots = async () => {
     } else {
       console.log('ℹ️ Slots already exist, skipping seeding.');
     }
-    process.exit(0);
   } catch (err) {
     console.error('❌ Error seeding slots:', err);
-    process.exit(1);
   }
 };
 
