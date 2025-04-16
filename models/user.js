@@ -4,9 +4,10 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     static associate(models) {
-      User.hasMany(models.Slot, {
-        foreignKey: 'bookedBy',
-        as: 'slots',
+      // A user can have many bookings
+      User.hasMany(models.Booking, {
+        foreignKey: 'userId',
+        as: 'bookings',
       });
     }
   }
@@ -16,11 +17,18 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       unique: true,
       allowNull: false,
+      validate: {
+        isEmail: true,
+      },
     },
     password: {
       type: DataTypes.STRING,
       allowNull: false,
     },
+    isAdmin: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },    
   }, {
     sequelize,
     modelName: 'User',
