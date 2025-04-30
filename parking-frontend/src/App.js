@@ -6,6 +6,8 @@ import Dashboard from './pages/Dashboard';
 import Slots from './pages/Slots';
 import MyBookings from './pages/MyBookings';
 import AdminDashboard from './pages/AdminDashboard';
+import Statistics from './pages/Statistics';
+import AdminStatistics from './pages/AdminStatistics';
 
 function App() {
   const token = localStorage.getItem('token');
@@ -19,7 +21,9 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/slots" element={<Slots />} />
         <Route path="/my-bookings" element={<MyBookings />} />
+        <Route path="/statistics" element={<Statistics />} />
         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/statistics" element={<AdminStatistics />} />
       </Routes>
     </Router>
   );

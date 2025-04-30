@@ -124,3 +124,59 @@ exports.getMyBookingHistory = async (req, res) => {
     res.status(500).json({ message: 'Error fetching booking history.' });
   }
 };
+
+exports.getUserBookingStats = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+
+    // Total bookings per month
+    const bookingsPerMonth = await Promise.all(
+      Array.from({ length: 13 }, (_, i) => {
+        const monthStart = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
+        const monthEnd = new Date(startDate.getFullYear(), startDate.getMonth() + i + 1, 0);
+        return Booking.count({
+          where: {
+            userId,
+            date: { [Op.between]: [monthStart, monthEnd] },
+          },
+        }).then((currentCount) =>
+          BookingHistory.count({
+            where: {
+              userId,
+              date: { [Op.between]: [monthStart, monthEnd] },
+            },
+          }).then((historyCount) => ({
+            month: monthStart.toLocaleString('default', { month: 'short', year: 'numeric' }),
+            count: currentCount + historyCount,
+          }))
+        );
+      })
+    );
+
+    // Car types booked
+    const carTypes = await Promise.all(
+      ['Sedan', 'SUV', 'Coupe', 'Hatchback', 'Minivan', 'Electric Car'].map((type) =>
+        Booking.count({
+          where: { userId, carType: type },
+        }).then((currentCount) =>
+          BookingHistory.count({
+            where: { userId, carType: type },
+          }).then((historyCount) => ({
+            type,
+            count: currentCount + historyCount,
+          }))
+        )
+      )
+    );
+
+    res.status(200).json({
+      bookingsPerMonth,
+      carTypes: carTypes.filter((c) => c.count > 0), // Only include types with bookings
+    });
+  } catch (err) {
+    console.error('Error fetching user stats:', err);
+    res.status(500).json({ message: 'Error fetching statistics.' });
+  }
+};

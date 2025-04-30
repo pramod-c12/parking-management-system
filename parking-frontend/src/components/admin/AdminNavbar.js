@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
-const Navbar = () => {
+const AdminNavbar = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
 
@@ -13,19 +13,13 @@ const Navbar = () => {
   return (
     <nav className="bg-gray-800 text-white p-4">
       <div className="max-w-6xl mx-auto flex justify-between items-center">
-        <div className="text-xl font-bold">ParkMate</div>
+        <div className="text-xl font-bold">ParkMate Admin</div>
         {token && (
           <div className="flex space-x-4 items-center">
-            <Link to="/dashboard" className="hover:text-gray-300">
+            <Link to="/admin" className="hover:text-gray-300">
               Dashboard
             </Link>
-            <Link to="/slots" className="hover:text-gray-300">
-              Book a Slot
-            </Link>
-            <Link to="/my-bookings" className="hover:text-gray-300">
-              My Bookings
-            </Link>
-            <Link to="/statistics" className="hover:text-gray-300">
+            <Link to="/admin/statistics" className="hover:text-gray-300">
               Statistics
             </Link>
             <button
@@ -41,4 +35,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;
+export default AdminNavbar;

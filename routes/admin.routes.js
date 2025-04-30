@@ -25,5 +25,6 @@ router.delete(
     adminMiddleware,
     adminController.cleanupExpiredBookings
   );
+  router.get('/stats', authMiddleware, adminMiddleware, adminController.getAdminBookingStats);
 
 module.exports = router;

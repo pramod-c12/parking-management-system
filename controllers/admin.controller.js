@@ -199,3 +199,100 @@ exports.deleteBooking = async (req, res) => {
     res.status(500).json({ message: 'Error deleting booking.' });
   }
 };
+
+exports.getAdminBookingStats = async (req, res) => {
+  try {
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), now.getMonth() - 11, 1); // Last 12 months
+
+    // Total bookings per month
+    const bookingsPerMonth = await Promise.all(
+      Array.from({ length: 13 }, (_, i) => {
+        const monthStart = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
+        const monthEnd = new Date(startDate.getFullYear(), startDate.getMonth() + i + 1, 0);
+        return Booking.count({
+          where: {
+            date: { [Op.between]: [monthStart, monthEnd] },
+          },
+        }).then((currentCount) =>
+          BookingHistory.count({
+            where: {
+              date: { [Op.between]: [monthStart, monthEnd] },
+            },
+          }).then((historyCount) => ({
+            month: monthStart.toLocaleString('default', { month: 'short', year: 'numeric' }),
+            count: currentCount + historyCount,
+          }))
+        );
+      })
+    );
+
+    // Car types booked
+    const carTypes = await Promise.all(
+      ['Sedan', 'SUV', 'Coupe', 'Hatchback', 'Minivan', 'Electric Car'].map((type) =>
+        Booking.count({
+          where: { carType: type },
+        }).then((currentCount) =>
+          BookingHistory.count({
+            where: { carType: type },
+          }).then((historyCount) => ({
+            type,
+            count: currentCount + historyCount,
+          }))
+        )
+      )
+    );
+
+    // Frequently booked slots
+    const frequentSlots = await BookingHistory.findAll({
+      attributes: [
+        'slotNumber',
+        [sequelize.fn('COUNT', sequelize.col('slotNumber')), 'count'],
+      ],
+      group: ['slotNumber'],
+      order: [[sequelize.literal('count'), 'DESC']],
+      limit: 5, // Top 5 slots
+    }).then((historySlots) =>
+      Booking.findAll({
+        attributes: [
+          'slotId',
+          [sequelize.fn('COUNT', sequelize.col('slotId')), 'count'],
+        ],
+        include: [{ model: Slot, as: 'slot', attributes: ['slotNumber'] }],
+        group: ['slotId', 'slot.id', 'slot.slotNumber'],
+        order: [[sequelize.literal('count'), 'DESC']],
+        limit: 5,
+      }).then((currentSlots) => {
+        const combined = [
+          ...historySlots.map((s) => ({
+            slotNumber: s.slotNumber,
+            count: s.dataValues.count,
+          })),
+          ...currentSlots.map((s) => ({
+            slotNumber: s.slot?.slotNumber || 'N/A',
+            count: s.dataValues.count,
+          })),
+        ];
+        const aggregated = Object.values(
+          combined.reduce((acc, { slotNumber, count }) => {
+            acc[slotNumber] = {
+              slotNumber,
+              count: (acc[slotNumber]?.count || 0) + count,
+            };
+            return acc;
+          }, {})
+        );
+        return aggregated.sort((a, b) => b.count - a.count).slice(0, 5);
+      })
+    );
+
+    res.status(200).json({
+      bookingsPerMonth,
+      carTypes: carTypes.filter((c) => c.count > 0),
+      frequentSlots,
+    });
+  } catch (err) {
+    console.error('Error fetching admin stats:', err);
+    res.status(500).json({ message: 'Error fetching statistics.' });
+  }
+};

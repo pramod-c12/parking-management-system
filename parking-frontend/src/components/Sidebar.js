@@ -1,27 +1,53 @@
-// src/components/Sidebar.js
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 
 const Sidebar = () => {
-  const navLinkClass = ({ isActive }) =>
-    `block px-4 py-3 rounded hover:bg-gray-200 ${
-      isActive ? 'bg-gray-300 font-semibold' : ''
-    }`;
-
   return (
-    <aside className="w-64 bg-white shadow-md p-4">
-      <nav className="space-y-2">
-        <NavLink to="/dashboard" className={navLinkClass}>
-          Dashboard
-        </NavLink>
-        <NavLink to="/slots" className={navLinkClass}>
-          Available Slots
-        </NavLink>
-        <NavLink to="/my-bookings" className={navLinkClass}>
-          My Bookings
-        </NavLink>
-      </nav>
-    </aside>
+    <div className="w-64 bg-gray-100 h-screen p-4">
+      <h2 className="text-xl font-semibold mb-6 text-gray-800">Menu</h2>
+      <ul className="space-y-2">
+        <li>
+          <NavLink
+            to="/dashboard"
+            className={({ isActive }) =>
+              `block p-2 rounded ${isActive ? 'bg-gray-300' : 'hover:bg-gray-200'}`
+            }
+          >
+            Dashboard
+          </NavLink>
+        </li>
+        <li>
+          <NavLink
+            to="/slots"
+            className={({ isActive }) =>
+              `block p-2 rounded ${isActive ? 'bg-gray-300' : 'hover:bg-gray-200'}`
+            }
+          >
+            Book a Slot
+          </NavLink>
+        </li>
+        <li>
+          <NavLink
+            to="/my-bookings"
+            className={({ isActive }) =>
+              `block p-2 rounded ${isActive ? 'bg-gray-300' : 'hover:bg-gray-200'}`
+            }
+          >
+            My Bookings
+          </NavLink>
+        </li>
+        <li>
+          <NavLink
+            to="/statistics"
+            className={({ isActive }) =>
+              `block p-2 rounded ${isActive ? 'bg-gray-300' : 'hover:bg-gray-200'}`
+            }
+          >
+            Statistics
+          </NavLink>
+        </li>
+      </ul>
+    </div>
   );
 };
 
