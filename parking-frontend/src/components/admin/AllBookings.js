@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
 const AllBookings = () => {
-  const [bookings, setBookings] = useState([]);
+  const [currentBookings, setCurrentBookings] = useState([]);
+  const [historicalBookings, setHistoricalBookings] = useState([]);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null); // Track booking to delete
   const token = localStorage.getItem('token');
 
   useEffect(() => {
@@ -10,43 +12,126 @@ const AllBookings = () => {
       .get('http://localhost:5000/admin/bookings', {
         headers: { Authorization: `Bearer ${token}` },
       })
-      .then((res) => setBookings(res.data.bookings))
+      .then((res) => {
+        setCurrentBookings(res.data.currentBookings || []);
+        setHistoricalBookings(res.data.historicalBookings || []);
+      })
       .catch((err) => console.error(err));
   }, [token]);
+
+  const handleDeleteBooking = async (bookingId) => {
+    try {
+      await axios.delete(`http://localhost:5000/admin/bookings/${bookingId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCurrentBookings(currentBookings.filter((b) => b.id !== bookingId));
+      setConfirmDeleteId(null);
+    } catch (err) {
+      console.error('Error deleting booking:', err);
+      alert('Failed to delete booking.');
+    }
+  };
 
   return (
     <div className="p-4 bg-white shadow rounded-md">
       <h2 className="text-2xl font-semibold mb-4 text-gray-800">All Bookings</h2>
-      <div className="overflow-x-auto">
-        <table className="w-full border border-gray-200 text-sm text-left">
-          <thead className="bg-gray-100 text-gray-700">
-            <tr>
-              <th className="border px-4 py-2">Date</th>
-              <th className="border px-4 py-2">Time</th>
-              <th className="border px-4 py-2">Slot</th>
-              <th className="border px-4 py-2">Car</th>
-              <th className="border px-4 py-2">User</th>
-            </tr>
-          </thead>
-          <tbody>
-            {bookings.map((b) => (
-              <tr key={b.id} className="hover:bg-gray-50">
-                <td className="border px-4 py-2">{b.date}</td>
-                <td className="border px-4 py-2">
-                  {b.startTime} - {b.endTime}
-                </td>
-                <td className="border px-4 py-2">{b.slot?.slotNumber || 'N/A'}</td>
-                <td className="border px-4 py-2">
-                  {b.carNumber} ({b.carType})
-                </td>
-                <td className="border px-4 py-2">{b.user?.email || 'N/A'}</td>
+
+      {/* Current Bookings */}
+      <div className="mb-10">
+        <h3 className="text-xl font-semibold mb-4 text-gray-700">Current Bookings</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full border border-gray-200 text-sm text-left">
+            <thead className="bg-gray-100 text-gray-700">
+              <tr>
+                <th className="border px-4 py-2">Date</th>
+                <th className="border px-4 py-2">Time</th>
+                <th className="border px-4 py-2">Slot</th>
+                <th className="border px-4 py-2">Car</th>
+                <th className="border px-4 py-2">User</th>
+                <th className="border px-4 py-2">Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        {bookings.length === 0 && (
-          <p className="text-center text-gray-500 mt-4">No bookings found.</p>
-        )}
+            </thead>
+            <tbody>
+              {currentBookings.map((b) => (
+                <tr key={b.id} className="hover:bg-gray-50">
+                  <td className="border px-4 py-2">{b.date}</td>
+                  <td className="border px-4 py-2">
+                    {b.startTime} - {b.endTime}
+                  </td>
+                  <td className="border px-4 py-2">{b.slot?.slotNumber || 'N/A'}</td>
+                  <td className="border px-4 py-2">
+                    {b.carNumber} ({b.carType})
+                  </td>
+                  <td className="border px-4 py-2">{b.user?.email || 'N/A'}</td>
+                  <td className="border px-4 py-2">
+                    {confirmDeleteId === b.id ? (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleDeleteBooking(b.id)}
+                          className="bg-red-600 text-white px-2 py-1 rounded text-xs"
+                        >
+                          Confirm
+                        </button>
+                        <button
+                          onClick={() => setConfirmDeleteId(null)}
+                          className="bg-gray-300 text-gray-800 px-2 py-1 rounded text-xs"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmDeleteId(b.id)}
+                        className="text-red-500 hover:underline text-xs"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {currentBookings.length === 0 && (
+            <p className="text-center text-gray-500 mt-4">No current bookings found.</p>
+          )}
+        </div>
+      </div>
+
+      {/* Historical Bookings */}
+      <div>
+        <h3 className="text-xl font-semibold mb-4 text-gray-700">Booking History</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full border border-gray-200 text-sm text-left">
+            <thead className="bg-gray-100 text-gray-700">
+              <tr>
+                <th className="border px-4 py-2">Date</th>
+                <th className="border px-4 py-2">Time</th>
+                <th className="border px-4 py-2">Slot</th>
+                <th className="border px-4 py-2">Car</th>
+                <th className="border px-4 py-2">User</th>
+              </tr>
+            </thead>
+            <tbody>
+              {historicalBookings.map((b) => (
+                <tr key={b.id} className="hover:bg-gray-50">
+                  <td className="border px-4 py-2">{b.date}</td>
+                  <td className="border px-4 py-2">
+                    {b.startTime} - {b.endTime}
+                  </td>
+                  <td className="border px-4 py-2">{b.slotNumber || 'N/A'}</td>
+                  <td className="border px-4 py-2">
+                    {b.carNumber} ({b.carType})
+                  </td>
+                  <td className="border px-4 py-2">{b.userEmail || 'N/A'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {historicalBookings.length === 0 && (
+            <p className="text-center text-gray-500 mt-4">No historical bookings found.</p>
+          )}
+        </div>
       </div>
     </div>
   );

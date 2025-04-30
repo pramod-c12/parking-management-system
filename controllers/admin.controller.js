@@ -1,20 +1,31 @@
-const { Booking, Slot, User } = require('../models');
+const { Booking, Slot, User, BookingHistory } = require('../models');
 const { Op } = require('sequelize');
 const moment = require('moment'); // make sure you installed this
+const sendEmail = require('../utils/sendEmail');
+const { sequelize } = require('../models');
 
 // View all bookings
 exports.getAllBookings = async (req, res) => {
   try {
-    const bookings = await Booking.findAll({
+    const currentBookings = await Booking.findAll({
       include: [
-        { model: Slot, as: 'slot', attributes: ['slotNumber'] },
         { model: User, as: 'user', attributes: ['email'] },
+        { model: Slot, as: 'slot', attributes: ['slotNumber'] },
       ],
       order: [['date', 'ASC'], ['startTime', 'ASC']],
     });
-    res.json({ bookings });
+
+    const historicalBookings = await BookingHistory.findAll({
+      order: [['date', 'DESC'], ['startTime', 'DESC']],
+    });
+
+    res.status(200).json({
+      currentBookings,
+      historicalBookings,
+    });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch bookings', message: err.message });
+    console.error('Error fetching bookings:', err);
+    res.status(500).json({ message: 'Error fetching bookings.' });
   }
 };
 
@@ -75,27 +86,116 @@ exports.deleteSlot = async (req, res) => {
 // 🧼 Delete expired bookings (manual cleanup)
 exports.cleanupExpiredBookings = async (req, res) => {
   try {
-    const now = moment();
-    const today = now.format('YYYY-MM-DD');
-    const currentTime = now.format('HH:mm');
+    const now = new Date();
+    const currentDate = now.toISOString().split('T')[0];
+    const currentTime = now.toTimeString().slice(0, 5);
 
-    const deleted = await Booking.destroy({
+    const expiredBookings = await Booking.findAll({
       where: {
         [Op.or]: [
-          // Bookings in the past
-          { date: { [Op.lt]: today } },
-
-          // Bookings for today but already ended
+          { date: { [Op.lt]: currentDate } },
           {
-            date: today,
-            endTime: { [Op.lt]: currentTime }
-          }
-        ]
-      }
+            [Op.and]: [
+              { date: currentDate },
+              { endTime: { [Op.lte]: currentTime } },
+            ],
+          },
+        ],
+      },
+      include: [
+        { model: Slot, as: 'slot', attributes: ['slotNumber'] },
+        { model: User, as: 'user', attributes: ['email'] },
+      ],
     });
 
-    res.json({ message: `${deleted} expired bookings cleaned up.` });
+    if (expiredBookings.length === 0) {
+      return res.status(200).json({ message: 'No expired bookings found.' });
+    }
+
+    // Prepare historical data
+    const historyData = expiredBookings.map((booking) => ({
+      userId: booking.userId,
+      slotId: booking.slotId,
+      slotNumber: booking.slot?.slotNumber || 'N/A',
+      userEmail: booking.user?.email || 'N/A',
+      date: booking.date,
+      startTime: booking.startTime,
+      endTime: booking.endTime,
+      carNumber: booking.carNumber,
+      carType: booking.carType,
+      createdAt: booking.createdAt,
+      updatedAt: booking.updatedAt,
+    }));
+
+    // Move to BookingHistory and delete from Bookings
+    await sequelize.transaction(async (t) => {
+      await BookingHistory.bulkCreate(historyData, { transaction: t });
+      await Booking.destroy({
+        where: {
+          id: expiredBookings.map((b) => b.id),
+        },
+        transaction: t,
+      });
+    });
+
+    res.status(200).json({
+      message: `${expiredBookings.length} expired bookings moved to history.`,
+    });
   } catch (err) {
-    res.status(500).json({ error: 'Cleanup failed', message: err.message });
+    console.error('Cleanup error:', err);
+    res.status(500).json({ message: 'Error during cleanup.' });
+  }
+};
+
+exports.deleteBooking = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+
+    const booking = await Booking.findByPk(bookingId, {
+      include: [
+        { model: Slot, as: 'slot', attributes: ['slotNumber'] },
+        { model: User, as: 'user', attributes: ['email'] },
+      ],
+    });
+
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found.' });
+    }
+
+    const historyData = {
+      userId: booking.userId,
+      slotId: booking.slotId,
+      slotNumber: booking.slot?.slotNumber || 'N/A',
+      userEmail: booking.user?.email || 'N/A',
+      date: booking.date,
+      startTime: booking.startTime,
+      endTime: booking.endTime,
+      carNumber: booking.carNumber,
+      carType: booking.carType,
+      createdAt: booking.createdAt,
+      updatedAt: booking.updatedAt,
+    };
+
+    await sequelize.transaction(async (t) => {
+      await BookingHistory.create(historyData, { transaction: t });
+      await booking.destroy({ transaction: t });
+    });
+
+    // Send email notification
+    try {
+      await sendEmail({
+        to: booking.user?.email,
+        subject: 'Your Parking Booking Has Been Cancelled',
+        text: `Dear User,\n\nYour booking for slot ${booking.slot?.slotNumber || 'N/A'} on ${booking.date} from ${booking.startTime} to ${booking.endTime} has been cancelled by an admin.\n\nThank you,\nParkMate Team`,
+      });
+    } catch (emailErr) {
+      console.error('Failed to send notification email:', emailErr);
+      // Continue despite email failure to ensure booking is deleted
+    }
+
+    res.status(200).json({ message: 'Booking deleted and moved to history.' });
+  } catch (err) {
+    console.error('Error deleting booking:', err);
+    res.status(500).json({ message: 'Error deleting booking.' });
   }
 };

@@ -17,6 +17,7 @@ router.get('/bookings', authMiddleware, adminMiddleware, adminController.getAllB
 router.get('/slots', authMiddleware, adminMiddleware, adminController.getAllSlots);
 router.post('/slots', authMiddleware, adminMiddleware, adminController.addSlot);
 router.delete('/slots/:slotId', authMiddleware, adminMiddleware, adminController.deleteSlot);
+router.delete('/bookings/:bookingId', authMiddleware, adminMiddleware, adminController.deleteBooking);
 // Manual cleanup of expired bookings
 router.delete(
     '/cleanup',

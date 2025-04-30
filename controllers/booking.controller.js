@@ -1,4 +1,4 @@
-const { Booking, Slot } = require('../models');
+const { Booking, Slot, BookingHistory } = require('../models');
 const { Op } = require('sequelize');
 
 exports.bookSlot = async (req, res) => {
@@ -97,5 +97,30 @@ exports.cancelBooking = async (req, res) => {
     res.json({ message: 'Booking canceled successfully' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to cancel booking', message: err.message });
+  }
+};
+
+exports.getMyBookingHistory = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const currentBookings = await Booking.findAll({
+      where: { userId },
+      include: [{ model: Slot, as: 'slot', attributes: ['slotNumber'] }],
+      order: [['date', 'ASC'], ['startTime', 'ASC']],
+    });
+
+    const historicalBookings = await BookingHistory.findAll({
+      where: { userId },
+      order: [['date', 'DESC'], ['startTime', 'DESC']],
+    });
+
+    res.status(200).json({
+      currentBookings,
+      historicalBookings,
+    });
+  } catch (err) {
+    console.error('Error fetching booking history:', err);
+    res.status(500).json({ message: 'Error fetching booking history.' });
   }
 };

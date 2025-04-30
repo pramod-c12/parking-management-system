@@ -24,13 +24,27 @@ const Dashboard = () => {
     }
 
     axios
-      .get('http://localhost:5000/bookings/my-bookings', {
+      .get('http://localhost:5000/bookings/my-booking-history', {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
-        const bookings = res.data.bookings || [];
-        setBookingCount(bookings.length);
-        setRecentBookings(bookings.slice(0, 3));
+        const currentBookings = res.data.currentBookings || [];
+        const historicalBookings = res.data.historicalBookings || [];
+        setBookingCount(currentBookings.length);
+        // Combine and limit to 3 recent bookings
+        const allBookings = [
+          ...currentBookings.map((b) => ({
+            ...b,
+            slotNumber: b.slot?.slotNumber || 'N/A',
+            isCurrent: true,
+          })),
+          ...historicalBookings.map((b) => ({ ...b, isCurrent: false })),
+        ].sort((a, b) => {
+          const dateA = new Date(a.date);
+          const dateB = new Date(b.date);
+          return dateB - dateA;
+        });
+        setRecentBookings(allBookings.slice(0, 3));
       })
       .catch((err) => {
         console.error('Failed to fetch bookings:', err);
@@ -65,7 +79,8 @@ const Dashboard = () => {
                   className="bg-white shadow-sm rounded-lg p-4 border border-gray-100"
                 >
                   <p className="text-gray-800 font-medium">
-                    {booking.slot?.slotNumber || 'N/A'} – {booking.date}
+                    {booking.slotNumber || 'N/A'} – {booking.date}{' '}
+                    {booking.isCurrent ? '(Current)' : '(Past)'}
                   </p>
                   <p className="text-gray-600 text-sm">
                     {formatTime(booking.startTime)} - {formatTime(booking.endTime)}

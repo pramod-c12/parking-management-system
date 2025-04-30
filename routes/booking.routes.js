@@ -7,5 +7,6 @@ const authMiddleware = require('../middlewares/auth.middleware');
 router.post('/book', authMiddleware, bookingController.bookSlot);
 router.get('/my-bookings', authMiddleware, bookingController.getMyBookings);
 router.delete('/:bookingId', authMiddleware, bookingController.cancelBooking);
+router.get('/my-booking-history', authMiddleware, bookingController.getMyBookingHistory);
 
 module.exports = router;

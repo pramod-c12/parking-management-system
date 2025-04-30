@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar'; // Add this import
+import Navbar from '../components/Navbar';
 
 const MyBookings = () => {
-  const [bookedSlots, setBookedSlots] = useState([]);
+  const [currentBookings, setCurrentBookings] = useState([]);
+  const [historicalBookings, setHistoricalBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
@@ -17,13 +18,15 @@ const MyBookings = () => {
 
     const fetchMyBookings = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/bookings/my-bookings', {
+        const res = await axios.get('http://localhost:5000/bookings/my-booking-history', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setBookedSlots(res.data.bookings || []);
+        setCurrentBookings(res.data.currentBookings || []);
+        setHistoricalBookings(res.data.historicalBookings || []);
       } catch (err) {
-        console.error('Failed to fetch booked slots:', err);
-        setBookedSlots([]);
+        console.error('Failed to fetch bookings:', err);
+        setCurrentBookings([]);
+        setHistoricalBookings([]);
       } finally {
         setLoading(false);
       }
@@ -37,7 +40,7 @@ const MyBookings = () => {
       await axios.delete(`http://localhost:5000/bookings/${bookingId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setBookedSlots(bookedSlots.filter((slot) => slot.id !== bookingId));
+      setCurrentBookings(currentBookings.filter((booking) => booking.id !== bookingId));
     } catch (err) {
       console.error('Cancel failed:', err);
       alert('Failed to cancel booking.');
@@ -63,45 +66,90 @@ const MyBookings = () => {
 
           {loading ? (
             <div className="text-center text-gray-500">Loading your bookings...</div>
-          ) : bookedSlots.length === 0 ? (
-            <div className="text-center text-gray-600">You have no active bookings.</div>
           ) : (
-            <div className="grid gap-4">
-              {bookedSlots.map((slot) => (
-                <div
-                  key={slot.id}
-                  className="bg-white shadow-md rounded-lg p-5 flex items-center justify-between"
-                >
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-700">
-                      {slot.slot?.slotNumber || 'N/A'}
-                    </h4>
-                    <p className="text-sm text-gray-500">
-                      {slot.date} | {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      Car: {slot.carNumber} ({slot.carType})
-                    </p>
+            <>
+              {/* Current Bookings */}
+              <div className="mb-10">
+                <h3 className="text-xl font-semibold mb-4 text-gray-700">
+                  Current Bookings
+                </h3>
+                {currentBookings.length === 0 ? (
+                  <div className="text-center text-gray-600">
+                    You have no active bookings.
                   </div>
-                  <button
-                    onClick={() => cancelBooking(slot.id)}
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition duration-200"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+                ) : (
+                  <div className="grid gap-4">
+                    {currentBookings.map((booking) => (
+                      <div
+                        key={booking.id}
+                        className="bg-white shadow-md rounded-lg p-5 flex items-center justify-between"
+                      >
+                        <div>
+                          <h4 className="text-lg font-semibold text-gray-700">
+                            {booking.slot?.slotNumber || 'N/A'}
+                          </h4>
+                          <p className="text-sm text-gray-500">
+                            {booking.date} | {formatTime(booking.startTime)} -{' '}
+                            {formatTime(booking.endTime)}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            Car: {booking.carNumber} ({booking.carType})
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => cancelBooking(booking.id)}
+                          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition duration-200"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-          <div className="mt-8 text-center">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md shadow-md transition duration-200"
-            >
-              Back to Dashboard
-            </button>
-          </div>
+              {/* Historical Bookings */}
+              <div>
+                <h3 className="text-xl font-semibold mb-4 text-gray-700">
+                  Booking History
+                </h3>
+                {historicalBookings.length === 0 ? (
+                  <div className="text-center text-gray-600">
+                    You have no previous bookings.
+                  </div>
+                ) : (
+                  <div className="grid gap-4">
+                    {historicalBookings.map((booking) => (
+                      <div
+                        key={booking.id}
+                        className="bg-white shadow-md rounded-lg p-5"
+                      >
+                        <h4 className="text-lg font-semibold text-gray-700">
+                          {booking.slotNumber || 'N/A'}
+                        </h4>
+                        <p className="text-sm text-gray-500">
+                          {booking.date} | {formatTime(booking.startTime)} -{' '}
+                          {formatTime(booking.endTime)}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Car: {booking.carNumber} ({booking.carType})
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-8 text-center">
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md shadow-md transition duration-200"
+                >
+                  Back to Dashboard
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </>
