@@ -28,10 +28,12 @@ const runCleanupJob = async () => {
   }
 };
 
-// Schedule to run daily at midnight
-cron.schedule('0 0 * * *', () => {
-  console.log('[CRON] Running expired bookings cleanup...');
-  runCleanupJob();
-});
+// Only schedule if not in test environment
+if (process.env.NODE_ENV !== 'test') {
+  cron.schedule('0 0 * * *', () => {
+    console.log('[CRON] Running expired bookings cleanup...');
+    runCleanupJob();
+  });
+}
 
 module.exports = runCleanupJob;
