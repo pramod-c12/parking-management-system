@@ -1,11 +1,22 @@
 const { Sequelize } = require('sequelize');
 
-const sequelize = new Sequelize('parking_db', 'postgres', 'abc123', {
-  host: process.env.DB_HOST || 'localhost',
-  dialect: 'postgres',
-  retry: {
-    max: 10,      // Retry up to 10 times
-  },
-});
+const sequelize = process.env.DATABASE_URL
+  ? new Sequelize(process.env.DATABASE_URL, {
+      dialect: 'postgres',
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false,
+        },
+      },
+    })
+  : new Sequelize({
+      dialect: 'postgres',
+      host: process.env.DB_HOST || 'localhost',
+      port: 5432,
+      username: process.env.DB_USER || 'postgres',
+      password: process.env.DB_PASSWORD || 'securepassword123',
+      database: process.env.DB_NAME || 'parking_db',
+    });
 
 module.exports = sequelize;

@@ -1,25 +1,25 @@
-# Use official Node image
-FROM node:23-slim
+# Use a stable Node LTS version
+FROM node:20-slim
 
-# Install netcat (OpenBSD version)
-RUN apt-get update && apt-get install -y netcat-openbsd && rm -rf /var/lib/apt/lists/*
+# Install netcat for wait-for-db script
+RUN apt-get update && apt-get install -y netcat-traditional && rm -rf /var/lib/apt/lists/*
 
-# Create app directory
+# Set working directory
 WORKDIR /app
 
-# Copy package files and install dependencies
+# Copy package files and install production dependencies
 COPY package*.json ./
-RUN npm install
+RUN npm ci --production
 
 # Copy app source code
 COPY . .
 
-# Add and give execute permission to wait script
+# Copy and make wait script executable
 COPY wait-for-db.sh /wait-for-db.sh
 RUN chmod +x /wait-for-db.sh
 
-# Expose port
+# Expose port (Render may override this with PORT env var)
 EXPOSE 5000
 
-# Start app using the wait script
+# Start app (use wait-for-db for local dev; Render may not need it)
 CMD ["/wait-for-db.sh", "node", "app.js"]
