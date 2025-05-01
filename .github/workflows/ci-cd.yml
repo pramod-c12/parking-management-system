@@ -41,7 +41,7 @@ jobs:
           npm ci
       - name: Run Migrations
         run: |
-          npx cross-env NODE_ENV=test npx sequelize-cli db:migrate --env test
+          npx cross-env NODE_ENV=test npx sequelize-cli db:migrate
         env:
           DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
