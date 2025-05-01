@@ -1,11 +1,9 @@
-version: '3.9'
-
 services:
   db:
-    image: postgres:16
+    image: postgres:14
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: securepassword123
+      POSTGRES_PASSWORD: abc123
       POSTGRES_DB: parking_db
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -18,7 +16,7 @@ services:
       - db
     environment:
       DB_USER: postgres
-      DB_PASSWORD: securepassword123
+      DB_PASSWORD: abc123
       DB_NAME: parking_db
       DB_HOST: db
       JWT_SECRET: 0102030405060708090a0b0c0d0e0f

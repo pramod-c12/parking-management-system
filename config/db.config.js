@@ -1,3 +1,4 @@
+require('dotenv').config();
 const { Sequelize } = require('sequelize');
 
 const sequelize = process.env.DATABASE_URL
@@ -15,7 +16,7 @@ const sequelize = process.env.DATABASE_URL
       host: process.env.DB_HOST || 'localhost',
       port: 5432,
       username: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD || 'securepassword123',
+      password: process.env.DB_PASSWORD || 'abc123',
       database: process.env.DB_NAME || 'parking_db',
     });
 
