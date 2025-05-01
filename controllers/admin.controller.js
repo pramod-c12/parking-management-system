@@ -186,7 +186,7 @@ exports.deleteBooking = async (req, res) => {
       await sendEmail({
         to: booking.user?.email,
         subject: 'Your Parking Booking Has Been Cancelled',
-        text: `Dear User,\n\nYour booking for slot ${booking.slot?.slotNumber || 'N/A'} on ${booking.date} from ${booking.startTime} to ${booking.endTime} has been cancelled by an admin.\n\nThank you,\nParkMate Team`,
+        text: `Dear User,\n\nYour booking for slot ${booking.slot?.slotNumber || 'N/A'} on ${booking.date} from ${booking.startTime} to ${booking.endTime} has been cancelled by the Admin.\n\nThank you,\nParkMate Team`,
       });
     } catch (emailErr) {
       console.error('Failed to send notification email:', emailErr);

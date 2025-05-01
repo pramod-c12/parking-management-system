@@ -6,6 +6,7 @@ const AllBookings = () => {
   const [historicalBookings, setHistoricalBookings] = useState([]);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null); // Track booking to delete
   const token = localStorage.getItem('token');
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     axios
@@ -26,6 +27,8 @@ const AllBookings = () => {
       });
       setCurrentBookings(currentBookings.filter((b) => b.id !== bookingId));
       setConfirmDeleteId(null);
+      setMessage('Booking deleted and email successfully sent to the user.');
+      setTimeout(() => setMessage(''), 5000); // Auto-dismiss after 5s
     } catch (err) {
       console.error('Error deleting booking:', err);
       alert('Failed to delete booking.');
@@ -35,6 +38,12 @@ const AllBookings = () => {
   return (
     <div className="p-4 bg-white shadow rounded-md">
       <h2 className="text-2xl font-semibold mb-4 text-gray-800">All Bookings</h2>
+      {message && (
+        <div className="mb-4 p-2 bg-green-100 text-green-700 rounded text-sm">
+          {message}
+        </div>
+      )}
+
 
       {/* Current Bookings */}
       <div className="mb-10">
