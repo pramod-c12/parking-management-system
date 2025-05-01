@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 5000;
 
 // Configure CORS to allow the frontend domain
 app.use(cors({
-  origin: 'https://parking-management-system-1wxujsakv-pramod-cs-projects.vercel.app',
+  origin: 'https://parking-management-system-git-main-pramod-cs-projects.vercel.app',
   credentials: true, // Allow cookies or auth headers if needed
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
