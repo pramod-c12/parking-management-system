@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import axios from 'axios';
+const BASE_URL = process.env.REACT_APP_API_URL || 'https://parking-management-system-6t4i.onrender.com';
 
 const AddSlotForm = () => {
   const [slotNumber, setSlotNumber] = useState('');
@@ -21,7 +22,7 @@ const AddSlotForm = () => {
 
     axios
       .post(
-        'http://localhost:5000/admin/slots',
+        `${BASE_URL}/admin/slots`,
         { slotNumber },
         { headers: { Authorization: `Bearer ${token}` } }
       )

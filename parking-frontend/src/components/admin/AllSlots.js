@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+const BASE_URL = process.env.REACT_APP_API_URL || 'https://parking-management-system-6t4i.onrender.com';
 
 const AllSlots = () => {
   const [slots, setSlots] = useState([]);
@@ -8,7 +9,7 @@ const AllSlots = () => {
 
   useEffect(() => {
     axios
-      .get('http://localhost:5000/admin/slots', {
+      .get(`${BASE_URL}/admin/slots`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
@@ -25,7 +26,7 @@ const AllSlots = () => {
 
   const deleteSlot = (id) => {
     axios
-      .delete(`http://localhost:5000/admin/slots/${id}`, {
+      .delete(`${BASE_URL}/admin/slots/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then(() => {

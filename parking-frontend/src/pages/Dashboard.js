@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
+const BASE_URL = process.env.REACT_APP_API_URL || 'https://parking-management-system-6t4i.onrender.com';
 
 const Dashboard = () => {
   const [bookingCount, setBookingCount] = useState(0);
@@ -24,7 +25,7 @@ const Dashboard = () => {
     }
 
     axios
-      .get('http://localhost:5000/bookings/my-booking-history', {
+      .get(`${BASE_URL}/bookings/my-booking-history`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
+const BASE_URL = process.env.REACT_APP_API_URL || 'https://parking-management-system-6t4i.onrender.com';
 
 const timeRanges = [
   { label: '9:00 AM - 11:00 AM', start: '09:00', end: '11:00' },
@@ -27,7 +28,7 @@ const Slots = () => {
       if (!selectedRange) return;
 
       axios
-        .get('http://localhost:5000/slots/available', {
+        .get(`${BASE_URL}/slots/available`, {
           params: {
             date,
             start: selectedRange.start,
@@ -81,7 +82,7 @@ const Slots = () => {
 
     axios
       .post(
-        'http://localhost:5000/bookings/book',
+        `${BASE_URL}/bookings/book`,
         {
           date,
           slotId: selectedSlot.id,

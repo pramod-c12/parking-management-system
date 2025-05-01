@@ -11,6 +11,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+const BASE_URL = process.env.REACT_APP_API_URL || 'https://parking-management-system-6t4i.onrender.com';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
@@ -25,7 +26,7 @@ const AdminStatistics = () => {
 
   useEffect(() => {
     axios
-      .get('http://localhost:5000/admin/stats', {
+      .get(`${BASE_URL}/admin/stats`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {

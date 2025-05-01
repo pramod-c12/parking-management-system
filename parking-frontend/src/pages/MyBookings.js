@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+const BASE_URL = process.env.REACT_APP_API_URL || 'https://parking-management-system-6t4i.onrender.com';
 
 const MyBookings = () => {
   const [currentBookings, setCurrentBookings] = useState([]);
@@ -18,7 +19,7 @@ const MyBookings = () => {
 
     const fetchMyBookings = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/bookings/my-booking-history', {
+        const res = await axios.get(`${BASE_URL}/bookings/my-booking-history`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setCurrentBookings(res.data.currentBookings || []);
@@ -37,7 +38,7 @@ const MyBookings = () => {
 
   const cancelBooking = async (bookingId) => {
     try {
-      await axios.delete(`http://localhost:5000/bookings/${bookingId}`, {
+      await axios.delete(`${BASE_URL}/bookings/${bookingId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCurrentBookings(currentBookings.filter((booking) => booking.id !== bookingId));

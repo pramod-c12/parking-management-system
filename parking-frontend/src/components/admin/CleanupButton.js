@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+const BASE_URL = process.env.REACT_APP_API_URL || 'https://parking-management-system-6t4i.onrender.com';
 
 const CleanupButton = () => {
   const [confirming, setConfirming] = useState(false);
@@ -7,7 +8,7 @@ const CleanupButton = () => {
 
   const handleCleanup = () => {
     axios
-      .delete('http://localhost:5000/admin/cleanup', {
+      .delete(`${BASE_URL}/admin/cleanup`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {

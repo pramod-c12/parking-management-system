@@ -6,6 +6,7 @@ import AddSlotForm from '../components/admin/AddSlotForm';
 import CleanupButton from '../components/admin/CleanupButton';
 import AdminNavbar from '../components/admin/AdminNavbar';
 import { useNavigate } from 'react-router-dom';
+const BASE_URL = process.env.REACT_APP_API_URL || 'https://parking-management-system-6t4i.onrender.com';
 
 const AdminDashboard = () => {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -15,7 +16,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     axios
-      .get('http://localhost:5000/auth/me', {
+      .get(`${BASE_URL}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {

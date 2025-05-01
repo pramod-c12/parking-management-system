@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+const BASE_URL = process.env.REACT_APP_API_URL || 'https://parking-management-system-6t4i.onrender.com';
 
 const AllBookings = () => {
   const [currentBookings, setCurrentBookings] = useState([]);
@@ -10,7 +11,7 @@ const AllBookings = () => {
 
   useEffect(() => {
     axios
-      .get('http://localhost:5000/admin/bookings', {
+      .get(`${BASE_URL}/admin/bookings`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
@@ -22,7 +23,7 @@ const AllBookings = () => {
 
   const handleDeleteBooking = async (bookingId) => {
     try {
-      await axios.delete(`http://localhost:5000/admin/bookings/${bookingId}`, {
+      await axios.delete(`${BASE_URL}/admin/bookings/${bookingId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCurrentBookings(currentBookings.filter((b) => b.id !== bookingId));
