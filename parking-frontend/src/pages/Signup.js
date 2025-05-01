@@ -23,6 +23,7 @@ const Signup = () => {
     setError('');
 
     try {
+      console.log(formData);
       await axios.post(`${BASE_URL}/auth/signup`, formData);
       navigate('/login');
     } catch (err) {
