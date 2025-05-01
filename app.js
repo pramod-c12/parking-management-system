@@ -13,8 +13,13 @@ const { runCleanupJob } = require('./cron/cleanupExpiredBookings');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middlewares
-app.use(cors());
+// Configure CORS to allow the frontend domain
+app.use(cors({
+  origin: 'https://parking-management-system-1wxujsakv-pramod-cs-projects.vercel.app',
+  credentials: true, // Allow cookies or auth headers if needed
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 app.use(express.json());
 
 // Routes

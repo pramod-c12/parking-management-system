@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+const BASE_URL = process.env.REACT_APP_API_URL || 'https://parking-management-system-6t4i.onrender.com';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -22,7 +23,7 @@ const Signup = () => {
     setError('');
 
     try {
-      await axios.post('http://localhost:5000/auth/signup', formData);
+      await axios.post(`${BASE_URL}/auth/signup`, formData);
       navigate('/login');
     } catch (err) {
       setError(err.response?.data?.message || 'Something went wrong.');

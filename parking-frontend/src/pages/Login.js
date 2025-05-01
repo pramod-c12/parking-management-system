@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+const BASE_URL = process.env.REACT_APP_API_URL || 'https://parking-management-system-6t4i.onrender.com';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -22,12 +23,12 @@ const Login = () => {
 
     try {
       // Step 1: Login and get token
-      const res = await axios.post('http://localhost:5000/auth/login', formData);
+      const res = await axios.post(`${BASE_URL}/auth/login`, formData);
       const token = res.data.token;
       localStorage.setItem('token', token);
 
       // Step 2: Use token to fetch user info
-      const userRes = await axios.get('http://localhost:5000/auth/me', {
+      const userRes = await axios.get(`${BASE_URL}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
