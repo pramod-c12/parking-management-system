@@ -2,6 +2,7 @@ const request = require('supertest');
 const bcrypt = require('bcryptjs');
 const { app, startServer } = require('../app');
 const { sequelize, User } = require('../models');
+require('dotenv').config();
 
 describe('Auth API', () => {
   let server;
