@@ -21,5 +21,5 @@ RUN chmod +x /wait-for-db.sh
 # Expose port (Render may override this with PORT env var)
 EXPOSE 5000
 
-# Start app (use wait-for-db for local dev; Render may not need it)
-CMD ["/wait-for-db.sh", "node", "app.js"]
+# Start app (use shell form to allow environment variable substitution)
+CMD if [ "$USE_WAIT_SCRIPT" = "true" ]; then /wait-for-db.sh node app.js; else node app.js; fi
