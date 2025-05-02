@@ -1,7 +1,5 @@
 const { Booking, Slot, BookingHistory } = require('../models');
-const { Booking, Op } = require('sequelize');
-
-const { Booking, Op } = require('sequelize');
+const { Op } = require('sequelize');
 
 exports.bookSlot = async (req, res) => {
   try {
@@ -62,6 +60,12 @@ exports.bookSlot = async (req, res) => {
 
     if (startDateTime >= endDateTime) {
       return res.status(400).json({ message: 'End time must be after start time' });
+    }
+
+    // Validate slot existence
+    const slot = await Slot.findByPk(slotId);
+    if (!slot) {
+      return res.status(404).json({ message: 'Slot not found' });
     }
 
     // Check for overlap
