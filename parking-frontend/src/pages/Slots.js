@@ -7,7 +7,7 @@ const timeRanges = [
   { label: '9:00 AM - 11:00 AM', start: '09:00', end: '11:00' },
   { label: '11:00 AM - 1:00 PM', start: '11:00', end: '13:00' },
   { label: '1:00 PM - 3:00 PM', start: '13:00', end: '15:00' },
-  { label: '3:00 PM - 5:00 PM', start: '15:00', end: '17:00' }
+  { label: '3:00 PM - 5:00 PM', start: '15:00', end: '17:00' },
 ];
 
 const Slots = () => {
@@ -22,6 +22,25 @@ const Slots = () => {
 
   const token = localStorage.getItem('token');
 
+  // Filter time ranges based on today's date
+  const getAvailableTimeRanges = () => {
+    const selectedDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    selectedDate.setHours(0, 0, 0, 0);
+
+    if (selectedDate.getTime() === today.getTime()) {
+      const currentTime = new Date();
+      return timeRanges.filter(range => {
+        const [startHours, startMinutes] = range.start.split(':').map(Number);
+        const rangeStart = new Date();
+        rangeStart.setHours(startHours, startMinutes, 0, 0);
+        return rangeStart > currentTime;
+      });
+    }
+    return timeRanges;
+  };
+
   useEffect(() => {
     if (date && selectedTime) {
       const selectedRange = timeRanges.find(t => t.label === selectedTime);
@@ -32,11 +51,11 @@ const Slots = () => {
           params: {
             date,
             start: selectedRange.start,
-            end: selectedRange.end
+            end: selectedRange.end,
           },
           headers: {
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         })
         .then(res => {
           const sortedSlots = (res.data.availableSlots || []).sort((a, b) => {
@@ -49,6 +68,7 @@ const Slots = () => {
         .catch(err => {
           console.error(err);
           setAvailableSlots([]);
+          setError('Failed to fetch available slots. Please try again.');
         });
     }
   }, [date, selectedTime, token]);
@@ -89,16 +109,16 @@ const Slots = () => {
           startTime: selectedRange.start,
           endTime: selectedRange.end,
           carNumber,
-          carType
+          carType,
         },
         {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         }
       )
-      .then(() => {
-        setMessage('Booking confirmed ✅');
+      .then(res => {
+        setMessage(res.data.message || 'Booking confirmed ✅');
         setSelectedSlot(null);
         setCarNumber('');
         setCarType('');
@@ -108,9 +128,12 @@ const Slots = () => {
       })
       .catch(err => {
         console.error(err);
-        setError('Booking failed. Please try again.');
+        const errorMessage = err.response?.data?.message || 'Booking failed. Please try again.';
+        setError(errorMessage);
       });
   };
+
+  const availableTimeRanges = getAvailableTimeRanges();
 
   return (
     <>
@@ -139,7 +162,7 @@ const Slots = () => {
               className="w-full px-3 py-2 border border-gray-300 rounded shadow-sm"
             >
               <option value="">-- Choose Time Slot --</option>
-              {timeRanges.map((range, index) => (
+              {availableTimeRanges.map((range, index) => (
                 <option key={index} value={range.label}>
                   {range.label}
                 </option>

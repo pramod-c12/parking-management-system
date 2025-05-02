@@ -1,20 +1,27 @@
 const { Booking, Slot, BookingHistory } = require('../models');
-const { Op } = require('sequelize');
+const { Booking, Op } = require('sequelize');
+
+const { Booking, Op } = require('sequelize');
 
 exports.bookSlot = async (req, res) => {
   try {
     const { slotId, date, startTime, endTime, carNumber, carType } = req.body;
     const userId = req.user.id;
 
+    // Validate required fields
+    if (!slotId || !date || !startTime || !endTime || !carNumber || !carType) {
+      return res.status(400).json({ message: 'All fields are required: slotId, date, startTime, endTime, carNumber, carType' });
+    }
+
     // Validate car number
     const carNumberRegex = /^[A-Z]{2}[0-9]{2}[A-Z]{1,2}[0-9]{4}$/;
     if (!carNumberRegex.test(carNumber)) {
-      return res.status(400).json({ message: 'Invalid car number format' });
+      return res.status(400).json({ message: 'Invalid car number format. Example: MH12AB1234' });
     }
 
     const validCarTypes = ['Sedan', 'SUV', 'Coupe', 'Hatchback', 'Minivan', 'Electric Car'];
     if (!validCarTypes.includes(carType)) {
-      return res.status(400).json({ message: 'Invalid car type' });
+      return res.status(400).json({ message: 'Invalid car type. Must be one of: Sedan, SUV, Coupe, Hatchback, Minivan, Electric Car' });
     }
 
     // Validate date range
@@ -23,8 +30,38 @@ exports.bookSlot = async (req, res) => {
     const oneWeekLater = new Date();
     oneWeekLater.setDate(today.getDate() + 7);
 
+    // Reset time for date comparison
+    today.setHours(0, 0, 0, 0);
+    bookingDate.setHours(0, 0, 0, 0);
+    oneWeekLater.setHours(0, 0, 0, 0);
+
     if (bookingDate < today || bookingDate > oneWeekLater) {
-      return res.status(400).json({ message: 'Booking must be within the next 7 days' });
+      return res.status(400).json({ message: 'Booking must be within today and the next 7 days' });
+    }
+
+    // Validate startTime and endTime for same-day bookings
+    const isToday = bookingDate.getTime() === today.getTime();
+    if (isToday) {
+      const currentTime = new Date();
+      const [startHours, startMinutes] = startTime.split(':').map(Number);
+      const startDateTime = new Date(bookingDate);
+      startDateTime.setHours(startHours, startMinutes, 0, 0);
+
+      if (startDateTime <= currentTime) {
+        return res.status(400).json({ message: 'Cannot book a slot in the past or current time for today' });
+      }
+    }
+
+    // Validate time range (endTime must be after startTime)
+    const [startHours, startMinutes] = startTime.split(':').map(Number);
+    const [endHours, endMinutes] = endTime.split(':').map(Number);
+    const startDateTime = new Date(bookingDate);
+    const endDateTime = new Date(bookingDate);
+    startDateTime.setHours(startHours, startMinutes, 0, 0);
+    endDateTime.setHours(endHours, endMinutes, 0, 0);
+
+    if (startDateTime >= endDateTime) {
+      return res.status(400).json({ message: 'End time must be after start time' });
     }
 
     // Check for overlap
@@ -35,10 +72,10 @@ exports.bookSlot = async (req, res) => {
         [Op.or]: [
           {
             startTime: { [Op.lt]: endTime },
-            endTime: { [Op.gt]: startTime }
-          }
-        ]
-      }
+            endTime: { [Op.gt]: startTime },
+          },
+        ],
+      },
     });
 
     if (overlap) {
@@ -53,7 +90,7 @@ exports.bookSlot = async (req, res) => {
       startTime,
       endTime,
       carNumber,
-      carType
+      carType,
     });
 
     res.status(201).json({ message: 'Booking successful', booking });
