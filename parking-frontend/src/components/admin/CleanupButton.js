@@ -4,6 +4,7 @@ const BASE_URL = process.env.REACT_APP_API_URL || 'https://parking-management-sy
 
 const CleanupButton = () => {
   const [confirming, setConfirming] = useState(false);
+  const [message, setMessage] = useState('');
   const token = localStorage.getItem('token');
 
   const handleCleanup = () => {
@@ -12,11 +13,13 @@ const CleanupButton = () => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
-        alert(res.data.message);
+        setMessage(res.data.message || 'Cleanup successful');
+        setTimeout(() => setMessage(''), 5000); // Auto-dismiss after 5s
         setConfirming(false);
       })
       .catch((err) => {
-        alert(err.response?.data?.message || 'Cleanup failed');
+        setMessage(err.response?.data?.message || 'Cleanup failed');
+        setTimeout(() => setMessage(''), 5000); // Auto-dismiss after 5s
         setConfirming(false);
       });
   };
@@ -45,6 +48,17 @@ const CleanupButton = () => {
           >
             Cancel
           </button>
+        </div>
+      )}
+      {message && (
+        <div
+          className={`mt-3 p-3 rounded text-center ${
+            message.includes('failed')
+              ? 'bg-red-100 text-red-800'
+              : 'bg-green-100 text-green-800'
+          }`}
+        >
+          {message}
         </div>
       )}
     </div>
