@@ -40,7 +40,7 @@ async function startServer() {
   await seedSlots();
 
   const server = app.listen(PORT, () => {
-    console.log(`Server running at Render`);
+    console.log(`Server running at Backend`);
   });
 
   // Initialize and start the cron job
